@@ -16,12 +16,23 @@ open(FH, "<$fn") || die "failed to open $fn: $!";
 while(<FH>) {
     chomp;
 
+    if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
+        if (m/<DT><PRE>/) {
+            my $html = $_;
+            $html =~ s/<\/A><DT>/ /;  # fix missing space after extends
+            my $class = strip_html($html);
+
+            print "$class {\n";
+            print "\n";
+        }
+    }
+
     if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
         if (m/<\/PRE>$/) {
             my $html = $_;
             $html =~ s/&nbsp;/ /g;
             my $decl = strip_html($html);
-            
+
             print "\t$decl;\n";
         }
     }
@@ -40,3 +51,5 @@ while(<FH>) {
         }
     }
 }
+
+print "}\n";
