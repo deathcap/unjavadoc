@@ -13,6 +13,32 @@ sub strip_html {
     return $tree->as_text();
 }
 
+sub default_return {
+    my ($decl) = @_;
+
+    $decl =~ s/\s*(public|private|protected|static)\s*//g;
+    my @words = split /\s+/, $decl;
+    my $type = $words[0]; # first
+
+    my %defaults = (
+        void => undef,
+        int => '0',
+        short => '0',
+        long => '0',
+        float => '0.0',
+        double => '0.0',
+        boolean => 'false',
+    );
+
+    if (exists $defaults{$type}) {
+        return $defaults{$type};
+    } else {
+        # object reference types
+        # TODO: array type[], return new T()
+        return "null";
+    }
+}
+
 my $fn = '../jd-bukkit/jd.bukkit.org/rb/apidocs/org/bukkit/Material.html';
 open(FH, "<$fn") || die "failed to open $fn: $!";
 while(<FH>) {
@@ -41,11 +67,14 @@ while(<FH>) {
         #print "Method detail: $_\n";
         if (m/<\/PRE>$/) {
             my $html = $_;
-            my $text = strip_html($html);
+            my $decl = strip_html($html);
             #print "html: $html\n";
             print "\n";
-            print "\t$text {\n";
-            #print "\nreturn;\n"; // TODO: default return value
+            print "\t$decl {\n";
+            my $return = default_return($decl);
+            if (defined($return)) {
+                print "\t\treturn $return;\n";
+            }
             print "\t}\n";
         }
     }
