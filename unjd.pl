@@ -15,6 +15,17 @@ my $fn = '../jd-bukkit/jd.bukkit.org/rb/apidocs/org/bukkit/Material.html';
 open(FH, "<$fn") || die "failed to open $fn: $!";
 while(<FH>) {
     chomp;
+
+    if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
+        if (m/<\/PRE>$/) {
+            my $html = $_;
+            $html =~ s/&nbsp;/ /g;
+            my $decl = strip_html($html);
+            
+            print "\t$decl;\n";
+        }
+    }
+
     if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
         #print "Method detail: $_\n";
         if (m/<\/PRE>$/) {
@@ -22,10 +33,10 @@ while(<FH>) {
             $html =~ s/&nbsp;/ /g;
             my $text = strip_html($html);
             #print "html: $html\n";
+            print "\n";
             print "\t$text {\n";
             #print "\nreturn;\n"; // TODO: default return value
             print "\t}\n";
-            print "\n";
         }
     }
 }
