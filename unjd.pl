@@ -4,6 +4,8 @@ use warnings;
 
 use HTML::TreeBuilder;
 use File::Find qw(find);
+use File::Path qw(make_path);
+use File::Basename;
 
 sub strip_html {
     my ($html) = @_;
@@ -58,12 +60,24 @@ for my $root (@ARGV) {
         return if $base =~ m/^resources\//;
 
         print "$base\n";
-        unjd("$root$base");
+
+        my $name = $base;
+        $name =~ s/.html$//;
+
+        unjd("$root$base", $name);
     }, $root;
 }
 
 sub unjd {
     my ($path, $name) = @_;
+
+    my $outroot = "/tmp/out/";
+    my $outfn = "$outroot$name.java";
+
+    my $dir = dirname($outfn);
+    make_path($dir);
+
+    open(OUT, ">$outfn") || die "cannot open $outfn: $!";
 
     open(FH, "<$path") || die "cannot open $path: $!";
     while(<FH>) {
@@ -72,16 +86,16 @@ sub unjd {
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
             if (m/<\/FONT>$/) {
                 my $package = strip_html($_);
-                print "package $package;\n";
-                print "\n";
+                print OUT "package $package;\n";
+                print OUT "\n";
             }
 
             if (m/<DT><PRE>/) {
                 my $html = $_;
                 my $class = strip_html($html);
 
-                print "$class {\n";
-                print "\n";
+                print OUT "$class {\n";
+                print OUT "\n";
             }
         }
 
@@ -90,27 +104,27 @@ sub unjd {
                 my $html = $_;
                 my $decl = strip_html($html);
 
-                print "\t$decl;\n";
+                print OUT "\t$decl;\n";
             }
         }
 
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
-            #print "Method detail: $_\n";
+            #print OUT "Method detail: $_\n";
             if (m/<\/PRE>$/) {
                 my $html = $_;
                 my $decl = strip_html($html);
-                #print "html: $html\n";
-                print "\n";
-                print "\t$decl {\n";
+                #print OUT "html: $html\n";
+                print OUT "\n";
+                print OUT "\t$decl {\n";
                 my $return = default_return($decl);
                 if (defined($return)) {
-                    print "\t\treturn $return;\n";
+                    print OUT "\t\treturn $return;\n";
                 }
-                print "\t}\n";
+                print OUT "\t}\n";
             }
         }
     }
     close(FH);
-    print "}\n";
+    print OUT "}\n";
 }
 
