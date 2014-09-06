@@ -43,6 +43,12 @@ while(<>) {
     chomp;
 
     if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
+        if (m/<\/FONT>$/) {
+            my $package = strip_html($_);
+            print "package $package;\n";
+            print "\n";
+        }
+
         if (m/<DT><PRE>/) {
             my $html = $_;
             my $class = strip_html($html);
