@@ -39,9 +39,7 @@ sub default_return {
     }
 }
 
-my $fn = '../jd-bukkit/jd.bukkit.org/rb/apidocs/org/bukkit/Material.html';
-open(FH, "<$fn") || die "failed to open $fn: $!";
-while(<FH>) {
+while(<>) {
     chomp;
 
     if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
