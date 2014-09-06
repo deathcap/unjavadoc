@@ -56,6 +56,7 @@ find sub {
     my $base = $path;
     $base =~ s/$root//;
     return if $base !~ m(/);  # ignore root files, must be in subdirectory to be a class
+    return if $base =~ m(/class-use/);
     return if $base =~ m/^src-html\//;
     return if $base =~ m/^resources\//;
 
