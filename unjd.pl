@@ -22,7 +22,10 @@ while(<FH>) {
             $html =~ s/&nbsp;/ /g;
             my $text = strip_html($html);
             #print "html: $html\n";
-            print "text: $text\n";
+            print "\t$text {\n";
+            #print "\nreturn;\n"; // TODO: default return value
+            print "\t}\n";
+            print "\n";
         }
     }
 }
