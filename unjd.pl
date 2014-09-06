@@ -40,9 +40,11 @@ sub default_return {
     }
 }
 
-die "usage: $0 ../jd-bukkit/jd.bukkit.org/rb/apidocs/" if !@ARGV;
+die "usage: $0 javadocs-directory" if !@ARGV;
 
 for my $root (@ARGV) {
+    die "absolute path required, not $root" if $root !~ m/^\//;
+
     # find class documentation files
     find sub {
         my $path = $File::Find::name;
