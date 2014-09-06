@@ -19,6 +19,7 @@ while(<FH>) {
         #print "Method detail: $_\n";
         if (m/<\/PRE>$/) {
             my $html = $_;
+            $html =~ s/&nbsp;/ /g;
             my $text = strip_html($html);
             #print "html: $html\n";
             print "text: $text\n";
