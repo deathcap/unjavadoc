@@ -106,7 +106,12 @@ sub unjd {
                 my $html = $_;
                 my $decl = strip_html($html);
 
-                print OUT "\t$decl;\n";
+                # no modifiers allowed on enum constants, public static final Material foo; -> foo,
+                my @words = split /\s+/, $decl;
+                my $last = pop @words;
+                $decl = "$last,";
+
+                print OUT "\t$decl\n";
             }
         }
 
