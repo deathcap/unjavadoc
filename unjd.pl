@@ -48,7 +48,7 @@ my ($root, $outroot) = @ARGV;
 die "absolute path required, not $root" if $root !~ m/^\//;
 
 # find class documentation files
-#my @files;
+my @files;
 find sub {
     my $path = $File::Find::name;
     my $file = $_;
@@ -63,13 +63,19 @@ find sub {
     return if $base =~ m/^src-html\//;
     return if $base =~ m/^resources\//;
 
-    print "$base\n";
-
     my $name = $base;
     $name =~ s/.html$//;
 
-    unjd($name);
+    push @files, $name;
 }, $root;
+
+# sort so inner classes (foo.bar) come after outer classes (foo)
+@files = sort @files;
+
+for my $name (@files) {
+    print "$name\n";
+    unjd($name);
+}
 
 sub unjd {
     my ($name) = @_;
