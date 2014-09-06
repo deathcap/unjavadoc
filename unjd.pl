@@ -113,6 +113,7 @@ sub unjd {
 
                 print OUT "\t$decl\n";
             }
+            print OUT "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
         }
 
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
