@@ -81,6 +81,7 @@ sub unjd {
     open(FH, "<$path") || die "cannot open $path: $!";
 
     my $method_accum = "";
+    my $class_accum = "";
     while(<FH>) {
         chomp;
 
@@ -91,8 +92,14 @@ sub unjd {
                 print OUT "\n";
             }
 
-            if (m/<DT><PRE>/) {
-                my $html = $_;
+            $class_accum = "" if m/<DT><PRE>/;
+            if (m/^<DT><PRE>/ .. m/(?<!<\/CODE>)<\/A>(&gt;)?<\/DL>$/) {
+                $class_accum .= "$_ ";
+            }
+
+            if (m/(?<!<\/CODE>)<\/A>(&gt;)?<\/DL>$/) {
+                my $html = $class_accum;
+                $class_accum =~ s/\s+/ /g;
                 my $class = strip_html($html);
 
                 $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
@@ -120,7 +127,7 @@ sub unjd {
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
             #print OUT "Method detail: $_\n";
             $method_accum = "" if m/^<PRE>/;
-            if (m/^<PRE>/ .. /<\/PRE>$/) {
+            if (m/^<PRE>/ .. m/<\/PRE>$/) {
                 $method_accum .= $_ . " ";
             }
 
