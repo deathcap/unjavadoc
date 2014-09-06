@@ -40,16 +40,31 @@ sub default_return {
     }
 }
 
-die "usage: $0 javadoc-directory" if !@ARGV;
+die "usage: $0 ../jd-bukkit/jd.bukkit.org/rb/apidocs/" if !@ARGV;
 
-for (@ARGV) {
+for my $root (@ARGV) {
+    # find class documentation files
     find sub {
-        print $File::Find::name, "\n";
-    }, $_;
-}
-die;
+        my $path = $File::Find::name;
+        my $file = $_;
+        return if -d $file;
 
-while(<>) {
+        my $base = $path;
+        $base =~ s/$root//;
+        return if $base !~ m(/);  # ignore root files, must be in subdirectory to be a class
+        return if $base =~ m/^src-html\//;
+        return if $base =~ m/^resources\//;
+
+        print "$base\n";
+        unjd("$root$base");
+    }, $root;
+}
+
+sub unjd {
+    my ($path, $name) = @_;
+
+    open(FH, "<$path") || die "cannot open $path: $!";
+    while(<FH>) {
     chomp;
 
     if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
@@ -92,6 +107,8 @@ while(<>) {
             print "\t}\n";
         }
     }
+    }
+    close(FH);
+    print "}\n";
 }
 
-print "}\n";
