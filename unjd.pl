@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use HTML::TreeBuilder;
+use File::Find qw(find);
 
 sub strip_html {
     my ($html) = @_;
@@ -38,6 +39,15 @@ sub default_return {
         return "null";
     }
 }
+
+die "usage: $0 javadoc-directory" if !@ARGV;
+
+for (@ARGV) {
+    find sub {
+        print $File::Find::name, "\n";
+    }, $_;
+}
+die;
 
 while(<>) {
     chomp;
