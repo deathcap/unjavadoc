@@ -6,6 +6,7 @@ use HTML::TreeBuilder;
 use File::Find qw(find);
 use File::Path qw(make_path);
 use File::Basename;
+use File::Slurp qw/read_file write_file/;
 
 sub strip_html {
     my ($html) = @_;
@@ -168,16 +169,30 @@ sub unjd {
         # inner class
         my @words = split m/[.]/, $class_name;
         my ($outer_class, $inner_class) = @words;
-        print "OUTER: $outer_class of $class_name\n";
 
-        # TODO:need to embed in existing file
-        open(OUT, ">$outfn") || die "cannot open $outfn: $!";
-        print OUT $out;
-        close(OUT);
+        # replace last path component to get outer class filename
+        my $outer_path = $outfn;
+        $outer_path =~ s/\/[^\/]+$//;;
+        $outer_path .= "/$outer_class.java";
+
+        print "OUTER: $outer_path of $outfn\n";
+
+        # indent one level
+        $out =~ s/$outer_class\.//g;  # outer.inner -> inner
+        my @lines = split /\n/, $out;
+        @lines = grep { !m/^package / } @lines;
+        @lines = map { "\t$_" } @lines;
+        $out = join("\n", @lines);
+
+        # write inner class at end of outer class declaration
+        my $code = read_file($outer_path);
+        $code =~ s/}$//;
+        $code .= $out;
+        $code .= "\n}\n";
+
+        write_file($outer_path, $code);
     } else {
-        open(OUT, ">$outfn") || die "cannot open $outfn: $!";
-        print OUT $out;
-        close(OUT);
+        write_file($outfn, $out);
     }
 }
 
