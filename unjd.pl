@@ -48,6 +48,7 @@ my ($root, $outroot) = @ARGV;
 die "absolute path required, not $root" if $root !~ m/^\//;
 
 # find class documentation files
+#my @files;
 find sub {
     my $path = $File::Find::name;
     my $file = $_;
@@ -67,11 +68,12 @@ find sub {
     my $name = $base;
     $name =~ s/.html$//;
 
-    unjd("$root$base", $name, $outroot);
+    unjd($name);
 }, $root;
 
 sub unjd {
-    my ($path, $name, $outroot) = @_;
+    my ($name) = @_;
+    my $path = "$root$name.html";
 
     my $outfn = "$outroot$name.java";
 
