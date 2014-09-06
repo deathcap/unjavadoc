@@ -84,6 +84,7 @@ sub unjd {
     my $method_accum = "";
     my $class_accum = "";
     my $class_declared = 0;
+    my $class_name;
     while(<FH>) {
         chomp;
 
@@ -105,6 +106,10 @@ sub unjd {
                     my $class = strip_html($html);
 
                     $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
+
+                    $class_name = $class;
+                    $class_name =~ s/\s*(public|private|protected|static|final|class|enum|struct)\s*//g;
+                    $class_name =~ s/\s*(extends|implements).*//;
 
                     $out .= "$class {\n";
                     $out .= "\n";
@@ -150,8 +155,21 @@ sub unjd {
     }
     $out .= "}\n";
     close(FH);
-    open(OUT, ">$outfn") || die "cannot open $outfn: $!";
-    print OUT $out;
-    close(OUT);
+
+    if ($class_name =~ m/[.]/) {
+        # inner class
+        my @words = split m/[.]/, $class_name;
+        my ($outer_class, $inner_class) = @words;
+        print "OUTER: $outer_class of $class_name\n";
+
+        # TODO:need to embed in existing file
+        open(OUT, ">$outfn") || die "cannot open $outfn: $!";
+        print OUT $out;
+        close(OUT);
+    } else {
+        open(OUT, ">$outfn") || die "cannot open $outfn: $!";
+        print OUT $out;
+        close(OUT);
+    }
 }
 
