@@ -82,10 +82,12 @@ sub unjd {
 
     my $method_accum = "";
     my $class_accum = "";
+    my $class_declared = 0;
     while(<FH>) {
         chomp;
 
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
+            $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
             if (m/<\/FONT>$/) {
                 my $package = strip_html($_);
                 print OUT "package $package;\n";
@@ -93,19 +95,20 @@ sub unjd {
             }
 
             $class_accum = "" if m/<DT><PRE>/;
-            if (m/^<DT><PRE>/ .. m/(?<!<\/CODE>)<\/A>(&gt;)?<\/DL>$/) {
+            if (!$class_declared && (m/^<DT><PRE>/ .. m/(<\/A>)?(&gt;)?<\/DL>$/)) {
                 $class_accum .= "$_ ";
-            }
 
-            if (m/(?<!<\/CODE>)<\/A>(&gt;)?<\/DL>$/) {
-                my $html = $class_accum;
-                $class_accum =~ s/\s+/ /g;
-                my $class = strip_html($html);
+                if (m/(<\/A>)?(&gt;)?<\/DL>$/) {
+                    my $html = $class_accum;
+                    $class_accum =~ s/\s+/ /g;
+                    my $class = strip_html($html);
 
-                $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
+                    $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
 
-                print OUT "$class {\n";
-                print OUT "\n";
+                    print OUT "$class {\n";
+                    print OUT "\n";
+                    $class_declared = 1;  # only first match; other patterns are other class references
+                }
             }
         }
 
