@@ -11,7 +11,7 @@ use File::Slurp qw/read_file write_file/;
 sub strip_html {
     my ($html) = @_;
     $html =~ s/&nbsp;/ /g;
-    $html =~ s/\/A><DT>/ /g;  # fix missing space after extends, implements
+    $html =~ s/<DT>/ /g;  # fix missing space after extends, implements
     my $tree = HTML::TreeBuilder->new();
     $tree->parse($html);
     return $tree->as_text();
@@ -156,6 +156,7 @@ sub unjd {
                 my $html = $method_accum;
                 $html =~ s/\s+/ /g;
                 my $decl = strip_html($html);
+                $decl =~ s/^\s+//g;
                 $out .= "\n";
 
                 if ($is_interface) {
