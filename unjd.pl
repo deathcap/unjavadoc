@@ -121,12 +121,12 @@ sub unjd {
             #print OUT "Method detail: $_\n";
             $method_accum = "" if m/^<PRE>/;
             if (m/^<PRE>/ .. /<\/PRE>$/) {
-                s/\s+/ /g;
-                $method_accum .= $_;
+                $method_accum .= $_ . " ";
             }
 
             if (m/<\/PRE>$/) {
                 my $html = $method_accum;
+                $html =~ s/\s+/ /g;
                 my $decl = strip_html($html);
                 #print OUT "html: $html\n";
                 print OUT "\n";
