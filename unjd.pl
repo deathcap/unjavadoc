@@ -6,6 +6,8 @@ use HTML::TreeBuilder;
 
 sub strip_html {
     my ($html) = @_;
+    $html =~ s/&nbsp;/ /g;
+    $html =~ s/<\/A><DT>/ /;  # fix missing space after extends
     my $tree = HTML::TreeBuilder->new();
     $tree->parse($html);
     return $tree->as_text();
@@ -19,7 +21,6 @@ while(<FH>) {
     if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
         if (m/<DT><PRE>/) {
             my $html = $_;
-            $html =~ s/<\/A><DT>/ /;  # fix missing space after extends
             my $class = strip_html($html);
 
             print "$class {\n";
@@ -30,7 +31,6 @@ while(<FH>) {
     if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
         if (m/<\/PRE>$/) {
             my $html = $_;
-            $html =~ s/&nbsp;/ /g;
             my $decl = strip_html($html);
 
             print "\t$decl;\n";
@@ -41,7 +41,6 @@ while(<FH>) {
         #print "Method detail: $_\n";
         if (m/<\/PRE>$/) {
             my $html = $_;
-            $html =~ s/&nbsp;/ /g;
             my $text = strip_html($html);
             #print "html: $html\n";
             print "\n";
