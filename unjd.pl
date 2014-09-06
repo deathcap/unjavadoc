@@ -96,6 +96,7 @@ sub unjd {
     my $class_declared = 0;
     my $class_name;
     my $is_interface = 0;
+    my $is_enum = 0;
     while(<FH>) {
         chomp;
 
@@ -123,6 +124,7 @@ sub unjd {
                     $class_name =~ s/\s*(extends|implements).*//;
 
                     $is_interface = $class =~ m/\binterface\b/;
+                    $is_enum = $class =~ m/\benum\b/;
 
                     $out .= "$class {\n";
                     $out .= "\n";
@@ -158,6 +160,15 @@ sub unjd {
                 my $decl = strip_html($html);
                 $decl =~ s/^\s+//g;
                 $out .= "\n";
+
+                my ($method_name) = $decl =~ m/\s+(\w+)\(/;
+
+                if ($is_enum) {
+                    if ($method_name eq 'values' || $method_name eq 'valueOf') {
+                        # javadocs include values() and valueOf() but they are implemented by Enum
+                        next;
+                    }
+                }
 
                 my $is_abstract = $decl =~ m/\babstract\b/;
                 my $no_body = $is_interface || $is_abstract;
