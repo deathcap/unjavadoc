@@ -42,36 +42,34 @@ sub default_return {
     }
 }
 
-die "usage: $0 javadocs-directory" if !@ARGV;
+die "usage: $0 javadocs-directory out-root" if !@ARGV;
 
-for my $root (@ARGV) {
-    die "absolute path required, not $root" if $root !~ m/^\//;
+my ($root, $outroot) = @ARGV;
+die "absolute path required, not $root" if $root !~ m/^\//;
 
-    # find class documentation files
-    find sub {
-        my $path = $File::Find::name;
-        my $file = $_;
-        return if -d $file;
+# find class documentation files
+find sub {
+    my $path = $File::Find::name;
+    my $file = $_;
+    return if -d $file;
 
-        my $base = $path;
-        $base =~ s/$root//;
-        return if $base !~ m(/);  # ignore root files, must be in subdirectory to be a class
-        return if $base =~ m/^src-html\//;
-        return if $base =~ m/^resources\//;
+    my $base = $path;
+    $base =~ s/$root//;
+    return if $base !~ m(/);  # ignore root files, must be in subdirectory to be a class
+    return if $base =~ m/^src-html\//;
+    return if $base =~ m/^resources\//;
 
-        print "$base\n";
+    print "$base\n";
 
-        my $name = $base;
-        $name =~ s/.html$//;
+    my $name = $base;
+    $name =~ s/.html$//;
 
-        unjd("$root$base", $name);
-    }, $root;
-}
+    unjd("$root$base", $name, $outroot);
+}, $root;
 
 sub unjd {
-    my ($path, $name) = @_;
+    my ($path, $name, $outroot) = @_;
 
-    my $outroot = "/tmp/out/";
     my $outfn = "$outroot$name.java";
 
     my $dir = dirname($outfn);
