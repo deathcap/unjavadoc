@@ -67,48 +67,48 @@ sub unjd {
 
     open(FH, "<$path") || die "cannot open $path: $!";
     while(<FH>) {
-    chomp;
+        chomp;
 
-    if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
-        if (m/<\/FONT>$/) {
-            my $package = strip_html($_);
-            print "package $package;\n";
-            print "\n";
-        }
-
-        if (m/<DT><PRE>/) {
-            my $html = $_;
-            my $class = strip_html($html);
-
-            print "$class {\n";
-            print "\n";
-        }
-    }
-
-    if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
-        if (m/<\/PRE>$/) {
-            my $html = $_;
-            my $decl = strip_html($html);
-
-            print "\t$decl;\n";
-        }
-    }
-
-    if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
-        #print "Method detail: $_\n";
-        if (m/<\/PRE>$/) {
-            my $html = $_;
-            my $decl = strip_html($html);
-            #print "html: $html\n";
-            print "\n";
-            print "\t$decl {\n";
-            my $return = default_return($decl);
-            if (defined($return)) {
-                print "\t\treturn $return;\n";
+        if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
+            if (m/<\/FONT>$/) {
+                my $package = strip_html($_);
+                print "package $package;\n";
+                print "\n";
             }
-            print "\t}\n";
+
+            if (m/<DT><PRE>/) {
+                my $html = $_;
+                my $class = strip_html($html);
+
+                print "$class {\n";
+                print "\n";
+            }
         }
-    }
+
+        if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
+            if (m/<\/PRE>$/) {
+                my $html = $_;
+                my $decl = strip_html($html);
+
+                print "\t$decl;\n";
+            }
+        }
+
+        if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
+            #print "Method detail: $_\n";
+            if (m/<\/PRE>$/) {
+                my $html = $_;
+                my $decl = strip_html($html);
+                #print "html: $html\n";
+                print "\n";
+                print "\t$decl {\n";
+                my $return = default_return($decl);
+                if (defined($return)) {
+                    print "\t\treturn $return;\n";
+                }
+                print "\t}\n";
+            }
+        }
     }
     close(FH);
     print "}\n";
