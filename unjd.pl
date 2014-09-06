@@ -93,6 +93,8 @@ sub unjd {
                 my $html = $_;
                 my $class = strip_html($html);
 
+                $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
+
                 print OUT "$class {\n";
                 print OUT "\n";
             }
