@@ -21,6 +21,7 @@ sub default_return {
     my ($decl) = @_;
 
     $decl =~ s/\s*(public|private|protected|static)\s*//g;
+    $decl =~ s/\s*\@Deprecated\s*//g; # TODO: all annotations, regex
     my @words = split /\s+/, $decl;
     my $type = $words[0]; # first
 
