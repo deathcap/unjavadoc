@@ -10,7 +10,7 @@ use File::Basename;
 sub strip_html {
     my ($html) = @_;
     $html =~ s/&nbsp;/ /g;
-    $html =~ s/<\/A><DT>/ /;  # fix missing space after extends
+    $html =~ s/<\/A><DT>/ /g;  # fix missing space after extends, implements
     my $tree = HTML::TreeBuilder->new();
     $tree->parse($html);
     return $tree->as_text();
