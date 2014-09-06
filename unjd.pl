@@ -78,8 +78,9 @@ sub unjd {
     make_path($dir);
 
     open(OUT, ">$outfn") || die "cannot open $outfn: $!";
-
     open(FH, "<$path") || die "cannot open $path: $!";
+
+    my $method_accum = "";
     while(<FH>) {
         chomp;
 
@@ -118,8 +119,14 @@ sub unjd {
 
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
             #print OUT "Method detail: $_\n";
+            $method_accum = "" if m/^<PRE>/;
+            if (m/^<PRE>/ .. /<\/PRE>$/) {
+                s/\s+/ /g;
+                $method_accum .= $_;
+            }
+
             if (m/<\/PRE>$/) {
-                my $html = $_;
+                my $html = $method_accum;
                 my $decl = strip_html($html);
                 #print OUT "html: $html\n";
                 print OUT "\n";
