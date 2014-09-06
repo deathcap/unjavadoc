@@ -11,7 +11,7 @@ use File::Slurp qw/read_file write_file/;
 sub strip_html {
     my ($html) = @_;
     $html =~ s/&nbsp;/ /g;
-    $html =~ s/<\/A><DT>/ /g;  # fix missing space after extends, implements
+    $html =~ s/\/A><DT>/ /g;  # fix missing space after extends, implements
     my $tree = HTML::TreeBuilder->new();
     $tree->parse($html);
     return $tree->as_text();
@@ -95,6 +95,7 @@ sub unjd {
     my $class_accum = "";
     my $class_declared = 0;
     my $class_name;
+    my $is_interface = 0;
     while(<FH>) {
         chomp;
 
@@ -118,8 +119,10 @@ sub unjd {
                     $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
 
                     $class_name = $class;
-                    $class_name =~ s/\s*(public|private|protected|static|final|class|enum|struct)\s*//g;
+                    $class_name =~ s/\s*(public|private|protected|static|final|class|enum|struct|interface)\s*//g;
                     $class_name =~ s/\s*(extends|implements).*//;
+
+                    $is_interface = $class =~ m/\binterface\b/;
 
                     $out .= "$class {\n";
                     $out .= "\n";
@@ -154,12 +157,18 @@ sub unjd {
                 $html =~ s/\s+/ /g;
                 my $decl = strip_html($html);
                 $out .= "\n";
-                $out .= "\t$decl {\n";
-                my $return = default_return($decl);
-                if (defined($return)) {
-                    $out .= "\t\treturn $return;\n";
+
+                if ($is_interface) {
+                    $out .= "\t$decl;\n";
+                } else {
+                    # method body
+                    $out .= "\t$decl {\n";
+                    my $return = default_return($decl);
+                    if (defined($return)) {
+                        $out .= "\t\treturn $return;\n";
+                    }
+                    $out .= "\t}\n";
                 }
-                $out .= "\t}\n";
             }
         }
     }
