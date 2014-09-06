@@ -78,9 +78,9 @@ sub unjd {
     my $dir = dirname($outfn);
     make_path($dir);
 
-    open(OUT, ">$outfn") || die "cannot open $outfn: $!";
     open(FH, "<$path") || die "cannot open $path: $!";
 
+    my $out = "";
     my $method_accum = "";
     my $class_accum = "";
     my $class_declared = 0;
@@ -91,8 +91,8 @@ sub unjd {
             $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
             if (m/<\/FONT>$/) {
                 my $package = strip_html($_);
-                print OUT "package $package;\n";
-                print OUT "\n";
+                $out .= "package $package;\n";
+                $out .= "\n";
             }
 
             $class_accum = "" if m/<DT><PRE>/;
@@ -106,8 +106,8 @@ sub unjd {
 
                     $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
 
-                    print OUT "$class {\n";
-                    print OUT "\n";
+                    $out .= "$class {\n";
+                    $out .= "\n";
                     $class_declared = 1;  # only first match; other patterns are other class references
                 }
             }
@@ -123,13 +123,12 @@ sub unjd {
                 my $last = pop @words;
                 $decl = "$last,";
 
-                print OUT "\t$decl\n";
+                $out .= "\t$decl\n";
             }
-            print OUT "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
+            $out .= "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
         }
 
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
-            #print OUT "Method detail: $_\n";
             $method_accum = "" if m/^<PRE>/;
             if (m/^<PRE>/ .. m/<\/PRE>$/) {
                 $method_accum .= $_ . " ";
@@ -139,18 +138,20 @@ sub unjd {
                 my $html = $method_accum;
                 $html =~ s/\s+/ /g;
                 my $decl = strip_html($html);
-                #print OUT "html: $html\n";
-                print OUT "\n";
-                print OUT "\t$decl {\n";
+                $out .= "\n";
+                $out .= "\t$decl {\n";
                 my $return = default_return($decl);
                 if (defined($return)) {
-                    print OUT "\t\treturn $return;\n";
+                    $out .= "\t\treturn $return;\n";
                 }
-                print OUT "\t}\n";
+                $out .= "\t}\n";
             }
         }
     }
+    $out .= "}\n";
     close(FH);
-    print OUT "}\n";
+    open(OUT, ">$outfn") || die "cannot open $outfn: $!";
+    print OUT $out;
+    close(OUT);
 }
 
