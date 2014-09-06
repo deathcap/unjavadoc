@@ -159,7 +159,10 @@ sub unjd {
                 $decl =~ s/^\s+//g;
                 $out .= "\n";
 
-                if ($is_interface) {
+                my $is_abstract = $decl =~ m/\babstract\b/;
+                my $no_body = $is_interface || $is_abstract;
+
+                if ($no_body) {
                     $out .= "\t$decl;\n";
                 } else {
                     # method body
