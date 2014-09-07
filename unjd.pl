@@ -156,7 +156,7 @@ sub unjd {
                     $class =~ s/ extends Enum<([^<]+)>//;  # Java enums only implicitly extend java.lang.Enum
 
                     $class_name = $class;
-                    $class_name =~ s/\s*(public|private|protected|static|final|class|enum|struct|interface)\s*//g;
+                    $class_name =~ s/\s*(public|private|protected|static|final|class|enum|struct|interface|abstract)\s*//g;
                     $class_name =~ s/\s*(extends|implements).*//;
 
                     $is_interface = $class =~ m/\binterface\b/;
