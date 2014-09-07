@@ -111,13 +111,13 @@ EOF
 
     # each class
     for my $data (@classes) {
-        my $consts = join("", map { "$t$_,\n" } @{$data->{CONSTS}}) . ";\n";
+        my $consts = join("", map { "$t$_,\n" } @{$data->{CONSTS}}) . (@{$data->{CONSTS}} ? ";\n" : "");
         my $fields = join("", map { "$t$_;\n" } @{$data->{FIELDS}});
         my $methods = join("", map { "$t$_;\n" } @{$data->{METHODS}});
         my $indent = " " x ($data->{INNER} * 4);
 
         print FH <<EOF;
-${indent}class $data->{CLASS_DECL} {
+${indent}$data->{CLASS_DECL} {
 
 $indent$consts
 $indent$fields
