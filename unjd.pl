@@ -55,6 +55,8 @@ die "usage: $0 javadocs-directory out-root" if !@ARGV;
 my ($root, $outroot) = @ARGV;
 die "absolute path required, not $root" if $root !~ m/^\//;
 
+open(CSV, ">api.csv") || die "cannot open api.csv: $!";
+
 # find class documentation files
 my @files;
 find sub {
@@ -82,8 +84,10 @@ find sub {
 
 for my $name (@files) {
     print "$name\n";
-    unjd($name);
+    my @out = unjd($name);
+    print CSV join("\n", @out), "\n\n";
 }
+close(CSV);
 
 sub uniq {
     # http://perldoc.perl.org/perlfaq4.html#How-can-I-remove-duplicate-elements-from-a-list-or-array%3f
@@ -103,6 +107,7 @@ sub unjd {
     open(FH, "<$path") || die "cannot open $path: $!";
 
     my $out = "";
+    my @out;
     my $method_accum = "";
     my $class_accum = "";
     my $class_declared = 0;
@@ -111,6 +116,7 @@ sub unjd {
     my $is_enum = 0;
     my %imports;
     my $package_line = "";
+    my $package_name;
     my $in_inherited = 0;
     while(<FH>) {
         chomp;
@@ -135,6 +141,7 @@ sub unjd {
             if (m/<\/FONT>$/) {
                 my $package = strip_html($_);
                 $package_line = "package $package;\n";
+                $package_name = $package;
             }
 
             $class_accum = "" if m/<DT><PRE>/;
@@ -157,6 +164,7 @@ sub unjd {
 
                     $out .= "$class {\n";
                     $out .= "\n";
+                    push @out, "class\t$class";
                     $class_declared = 1;  # only first match; other patterns are other class references
                 }
             }
@@ -174,9 +182,13 @@ sub unjd {
                 $decl = "$last,";
 
                 $out .= "\t$decl\n";
+                push @out, "const\t$last";
                 $is_enum_constant = 1;
             }
-            $out .= "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
+            if ($_ eq '<!-- ============ METHOD DETAIL ========== -->') {
+                $out .= "\t;\n";
+                #push @out, "endconst";
+            }
         }
 
         my $is_constructor = $_ eq '<!-- ========= CONSTRUCTOR DETAIL ======== -->' .. $_ eq '<!-- ========= METHOD DETAIL ========= -->';
@@ -226,13 +238,16 @@ sub unjd {
                 next if $is_abstract && $is_field;
                 my $no_body = $is_interface || $is_abstract || $is_field;
 
-                #$out .= "XXX\t" if $is_constructor; # note: is_constructor actually is whether a constructor, or a field
                 if ($no_body) {
                     if ($is_field && $decl) {
                         my $default = default_return($decl);  # initialize fields TODO: only if final?  && $decl =~ m/\bfinal\b/)
                         $out .= "\n\t$decl = $default;\n";
+                        push @out, "field\t$decl\t$default";
                     } else {
-                        $out .= "\n\t$decl;\n" if length($decl);
+                        if (length($decl)) {
+                            $out .= "\n\t$decl;\n";
+                            push @out, "field\t$decl";
+                        }
                     }
                 } else {
                     # method body
@@ -240,6 +255,9 @@ sub unjd {
                     my $return = default_return($decl, $is_constructor);
                     if (defined($return)) {
                         $out .= "\t\treturn $return;\n";
+                        push @out, "method\t$decl\t$return";
+                    } else {
+                        push @out, "method\t$decl";
                     }
                     $out .= "\t}\n";
                 }
@@ -256,12 +274,14 @@ sub unjd {
         my $import_lines = "";
         for my $import (@imports) {
             $import_lines .= "import $import;\n";
+            unshift @out, "typeref\t$import";
         }
         $out = "$import_lines\n\n$out";
     }
 
     if ($package_line) {
         $out = "$package_line\n$out";
+        unshift @out, "scope\t$package_name";
     }
 
     if ($class_name =~ m/[.]/) {
@@ -295,9 +315,15 @@ sub unjd {
         $code .= $out;
         $code .= "\n}\n";
 
+        unshift @out, "outer\t$package_name.$outer_class";
+        unshift @out, "inner\t1";
+
         write_file($outer_path, $code);
     } else {
+        unshift @out, "outer\t$package_name.$class_name";
+        unshift @out, "inner\t0";
         write_file($outfn, $out);
     }
+    return @out;
 }
 
