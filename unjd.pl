@@ -160,7 +160,11 @@ sub unjd {
                 my $method_anchor = $1;    # name with fully-qualified type parameters TODO: but return value? may need to parse links instead
                 my ($ignored_name, $param_list) = $method_anchor =~ m/^([^(]+)\(([^)]*)/;
                 my @param_types = split /, /, $param_list;
-                @param_types = grep { m/[.]/ && $_ ne 'java.lang.String' } @param_types; # skiip unqualified types (assume built-in Java, float etc.)
+                @param_types = grep { m/[.]/ && $_ ne 'java.lang.String' } @param_types; # skip unqualified types (assume built-in Java, float etc.)
+                @param_types = map {
+                    s/\[|\]//g; # array types to basic
+                    s/\.\.\.//g; # variadic types to basic
+                    $_ } @param_types; 
 
                 # save fully-qualified type names for imports
                 $imports{$_}++ foreach @param_types;
