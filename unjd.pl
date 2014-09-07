@@ -241,12 +241,16 @@ sub unjd {
         $out =~ s/$outer_class\.//g;  # outer.inner -> inner
         my @lines = split /\n/, $out;
         @lines = grep { !m/^package / } @lines;
+        my @inner_imports = grep { m/^import / } @lines;  # need to move up
+        my $inner_imports = join("\n", @inner_imports);
+        @lines = grep { !m/^import / } @lines;
         @lines = map { "\t$_" } @lines;
         $out = join("\n", @lines);
 
-        # write inner class at end of outer class declaration
         my $code = read_file($outer_path);
+        $code =~ s/^(package ([^\n]+)\n\n)/$1$inner_imports\n/;  # inner imports at top, after package
         $code =~ s/}$//;
+        # inner class at end of outer class declaration
         $code .= $out;
         $code .= "\n}\n";
 
