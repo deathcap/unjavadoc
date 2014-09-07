@@ -111,7 +111,12 @@ sub unjd {
         if (m/title="(class|interface|class or interface) in ([^"]+)">([^<]+)/) {
             my $package = $2;
             my $symbol = $3;
-            $imports{"$package.$symbol"}++;
+
+            if ($symbol =~ m/[.]/) {  # already fully-qualified
+                $imports{$symbol}++;
+            } else {
+                $imports{"$package.$symbol"}++;
+            }
         }
 
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
@@ -166,7 +171,6 @@ sub unjd {
                 my $method_anchor = $1;    # name with fully-qualified type parameters TODO: but return value? may need to parse links instead
                 my ($ignored_name, $param_list) = $method_anchor =~ m/^([^(]+)\(([^)]*)/;
                 my @param_types = split /, /, $param_list;
-                @param_types = grep { m/[.]/ && $_ ne 'java.lang.String' } @param_types; # skip unqualified types (assume built-in Java, float etc.)
                 @param_types = map {
                     s/\[|\]//g; # array types to basic
                     s/\.\.\.//g; # variadic types to basic
@@ -220,6 +224,8 @@ sub unjd {
 
     if (keys %imports) {
         my @imports = sort keys %imports;
+        @imports = grep { m/[.]/ && !m/[ ]/} @imports; # skip unqualified types (assume built-in Java, float etc.), and spaces (non-identifiers)
+        @imports = grep { !m/^java\.lang\./ } @imports; # built-in types
         my $import_lines = "";
         for my $import (@imports) {
             $import_lines .= "import $import;\n";
