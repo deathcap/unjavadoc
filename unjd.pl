@@ -18,12 +18,16 @@ sub strip_html {
 }
 
 sub default_return {
-    my ($decl) = @_;
+    my ($decl, $is_constructor) = @_;
+
+    return undef if $is_constructor; # effectively void
 
     $decl =~ s/\s*(public|private|protected|static|final)\s*//g;
     $decl =~ s/\s*\@Deprecated\s*//g; # TODO: all annotations, regex
     my @words = split /\s+/, $decl;
     my $type = $words[0]; # first
+
+    die "default_return($decl, $is_constructor) fail to match type" if !defined($type);
 
     my %defaults = (
         void => undef,
@@ -171,12 +175,17 @@ sub unjd {
                 $out .= "\t$decl\n";
             }
             $out .= "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
+            next;
         }
 
-        if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
+        my $is_constructor = $_ eq '<!-- ========= CONSTRUCTOR DETAIL ======== -->' .. $_ eq '<!-- ========= METHOD DETAIL ========= -->';
+        my $is_method = $_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->';
+        $is_constructor = 0 if $is_method;
+        if ($is_method || $is_constructor && $class_declared) {
             if (m/^<A NAME="([^"]+)"><!-- --><\/A><H3>/) {
                 my $method_anchor = $1;    # name with fully-qualified type parameters TODO: but return value? may need to parse links instead
                 my ($ignored_name, $param_list) = $method_anchor =~ m/^([^(]+)\(([^)]*)/;
+                next if !defined($param_list);  # enum constant
                 my @param_types = split /, /, $param_list;
                 @param_types = map {
                     s/\[|\]//g; # array types to basic
@@ -200,7 +209,13 @@ sub unjd {
                 $decl =~ s/^\s+//g;
                 $out .= "\n";
 
-                my ($method_name) = $decl =~ m/\s+(\w+)\(/;
+                my $method_name;
+
+                if ($is_constructor) {
+                    ($method_name) = "CONSTRUCTOR"; #$decl; # TODO
+                } else {
+                    ($method_name) = $decl =~ m/\s+(\w+)\(/;
+                }
 
                 if ($is_enum) {
                     if ($method_name eq 'values' || $method_name eq 'valueOf') {
@@ -210,14 +225,21 @@ sub unjd {
                 }
 
                 my $is_abstract = $decl =~ m/\babstract\b/;
-                my $no_body = $is_interface || $is_abstract;
+                my $is_field = $decl !~ m/\(/;  # <!-- ============ FIELD DETAIL =========== --> ends up here too (hack)
+                my $no_body = $is_interface || $is_abstract || $is_field;
 
+                #$out .= "XXX\t" if $is_constructor; # note: is_constructor actually is whether a constructor, or a field
                 if ($no_body) {
-                    $out .= "\t$decl;\n";
+                    if ($is_field && $decl) {
+                        my $default = default_return($decl);  # initialize fields TODO: only if final?  && $decl =~ m/\bfinal\b/)
+                        $out .= "\t$decl = $default;\n";
+                    } else {
+                        $out .= "\t$decl;\n";
+                    }
                 } else {
                     # method body
                     $out .= "\t$decl {\n";
-                    my $return = default_return($decl);
+                    my $return = default_return($decl, $is_constructor);
                     if (defined($return)) {
                         $out .= "\t\treturn $return;\n";
                     }
