@@ -62,10 +62,14 @@ while(<>) {
     } elsif ($kind eq 'const') {
         push @consts, $tokens[1];
     } elsif ($kind eq 'method') {
-        push @methods, $tokens[1];
-        #print "\t$tokens[1] {";
-        #print "\t\treturn $tokens[2];\n" if defined($tokens[1]);
-        #print "\t}\n";
+        if (defined($tokens[2])) {
+            push @methods, "$tokens[1] {";
+            push @methods, "\treturn $tokens[2];";
+            push @methods, "}";
+            push @methods, "";
+        } else {
+            push @methods, "$tokens[1];";
+        }
     } else {
         die "unrecognized line: |$kind|";
     }
@@ -113,7 +117,7 @@ EOF
     for my $data (@classes) {
         my $consts = join("", map { "$t$_,\n" } @{$data->{CONSTS}}) . (@{$data->{CONSTS}} ? ";\n" : "");
         my $fields = join("", map { "$t$_;\n" } @{$data->{FIELDS}});
-        my $methods = join("", map { "$t$_;\n" } @{$data->{METHODS}});
+        my $methods = join("", map { "$t$_\n" } @{$data->{METHODS}});
         my $indent = " " x ($data->{INNER} * 4);
 
         print FH <<EOF;
