@@ -27,6 +27,7 @@ sub default_return {
 
     my %defaults = (
         void => undef,
+        byte => '0',
         int => '0',
         short => '0',
         long => '0',
