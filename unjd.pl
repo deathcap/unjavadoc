@@ -108,6 +108,12 @@ sub unjd {
     while(<FH>) {
         chomp;
 
+        if (m/title="(interface|class) in ([^"]+)">([^<]+)/) {
+            my $package = $2;
+            my $symbol = $3;
+            $imports{"$package.$symbol"}++;
+        }
+
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
             $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
             if (m/<\/FONT>$/) {
