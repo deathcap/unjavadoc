@@ -117,6 +117,8 @@ sub unjd {
 
             if ($symbol =~ m/^$package/) {  # already fully-qualified
                 $imports{$symbol}++;
+            } elsif ($symbol =~ m/^[a-z]/) {
+                # lowercase symbol name, probably not actually a class we need to import
             } else {
                 $imports{"$package.$symbol"}++ unless $in_inherited;
             }
