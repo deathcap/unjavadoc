@@ -106,6 +106,7 @@ sub unjd {
     my $is_enum = 0;
     my %imports;
     my $package_line = "";
+    my $in_inherited = 0;
     while(<FH>) {
         chomp;
 
@@ -116,9 +117,12 @@ sub unjd {
             if ($symbol =~ m/^$package/) {  # already fully-qualified
                 $imports{$symbol}++;
             } else {
-                $imports{"$package.$symbol"}++;
+                $imports{"$package.$symbol"}++ unless $in_inherited;
             }
         }
+
+        $in_inherited = (m/Fields inherited from / .. $_ eq '<!-- ======== CONSTRUCTOR SUMMARY ======== -->') ||
+             (m/Methods inherited from / .. $_ eq '<!-- ========= CONSTRUCTOR DETAIL ======== -->');
 
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
             $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
