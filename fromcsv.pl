@@ -70,6 +70,7 @@ while(<>) {
             push @methods, "";
         } else {
             push @methods, "$tokens[1];";
+            push @methods, "";
         }
     } else {
         die "unrecognized line: |$kind|";
