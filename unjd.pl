@@ -243,6 +243,8 @@ sub unjd {
         my @words = split m/[.]/, $class_name;
         my ($outer_class, $inner_class) = @words;
 
+        $outer_class =~ s/\@Deprecated//; # TODO: remove all annotations
+
         # replace last path component to get outer class filename
         my $outer_path = $outfn;
         $outer_path =~ s/\/[^\/]+$//;;
