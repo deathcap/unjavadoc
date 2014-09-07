@@ -105,7 +105,7 @@ for my $filename (sort keys %files) {
         die "mismatched package name per file, $package ne $data->{PACKAGE_NAME}" if (defined($package) && $package ne $data->{PACKAGE_NAME});
         $package = $data->{PACKAGE_NAME}
     }
-    my $imports = join("", map { "import $_;\n" } @imports);
+    my $imports = join("", map { "import $_;\n" } sort @imports);
 
     print FH <<EOF;
 package $package;
