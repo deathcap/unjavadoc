@@ -208,7 +208,6 @@ sub unjd {
                 $html =~ s/\s+/ /g;
                 my $decl = strip_html($html);
                 $decl =~ s/^\s+//g;
-                $out .= "\n";
 
                 my $method_name;
 
@@ -224,6 +223,7 @@ sub unjd {
 
                 my $is_abstract = $decl =~ m/\babstract\b/;
                 my $is_field = $decl !~ m/\(/;  # <!-- ============ FIELD DETAIL =========== --> ends up here too (hack)
+                next if $is_abstract && $is_field;
                 my $no_body = $is_interface || $is_abstract || $is_field;
 
                 #$out .= "XXX\t" if $is_constructor; # note: is_constructor actually is whether a constructor, or a field
