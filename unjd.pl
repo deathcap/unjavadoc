@@ -30,7 +30,7 @@ sub default_return {
         int => '0',
         short => '0',
         long => '0',
-        float => '0.0',
+        float => '0.0f',
         double => '0.0',
         boolean => 'false',
     );
