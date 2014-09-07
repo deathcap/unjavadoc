@@ -109,11 +109,11 @@ sub unjd {
     while(<FH>) {
         chomp;
 
-        if (m/title="(class|interface|class or interface) in ([^"]+)">([^<]+)/) {
+        if (m/title="(class|interface|enum|class or interface) in ([^"]+)">([^<]+)/) {
             my $package = $2;
             my $symbol = $3;
 
-            if ($symbol =~ m/[.]/) {  # already fully-qualified
+            if ($symbol =~ m/^$package/) {  # already fully-qualified
                 $imports{$symbol}++;
             } else {
                 $imports{"$package.$symbol"}++;
