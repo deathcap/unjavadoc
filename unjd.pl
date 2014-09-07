@@ -121,8 +121,7 @@ sub unjd {
             }
         }
 
-        $in_inherited = (m/Fields inherited from / .. $_ eq '<!-- ======== CONSTRUCTOR SUMMARY ======== -->') ||
-             (m/Methods inherited from / .. $_ eq '<!-- ========= CONSTRUCTOR DETAIL ======== -->');
+        $in_inherited = (m/Fields inherited from / .. $_ eq '<!-- ======== CONSTRUCTOR SUMMARY ======== -->');
 
         if ($_ eq '<!-- ======== START OF CLASS DATA ======== -->' .. $_ eq '<!-- =========== ENUM CONSTANT SUMMARY =========== -->') {
             $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
