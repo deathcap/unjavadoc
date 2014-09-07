@@ -162,6 +162,7 @@ sub unjd {
             }
         }
 
+        my $is_enum_constant = 0;
         if ($_ eq '<!-- ============ ENUM CONSTANT DETAIL =========== -->' .. $_ eq '<!-- ============ METHOD DETAIL ========== -->') {
             if (m/<\/PRE>$/) {
                 my $html = $_;
@@ -173,15 +174,15 @@ sub unjd {
                 $decl = "$last,";
 
                 $out .= "\t$decl\n";
+                $is_enum_constant = 1;
             }
             $out .= "\t;\n" if $_ eq '<!-- ============ METHOD DETAIL ========== -->';
-            next;
         }
 
         my $is_constructor = $_ eq '<!-- ========= CONSTRUCTOR DETAIL ======== -->' .. $_ eq '<!-- ========= METHOD DETAIL ========= -->';
         my $is_method = $_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->';
         $is_constructor = 0 if $is_method;
-        if ($is_method || $is_constructor && $class_declared) {
+        if ($is_method || $is_constructor && $class_declared && !$is_enum_constant) {
             if (m/^<A NAME="([^"]+)"><!-- --><\/A><H3>/) {
                 my $method_anchor = $1;    # name with fully-qualified type parameters TODO: but return value? may need to parse links instead
                 my ($ignored_name, $param_list) = $method_anchor =~ m/^([^(]+)\(([^)]*)/;
