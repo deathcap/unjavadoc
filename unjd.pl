@@ -250,7 +250,6 @@ sub unjd {
         print "OUTER: $outer_path of $outfn\n";
 
         # indent one level
-        $out =~ s/$outer_class\.//g;  # outer.inner -> inner
         my @lines = split /\n/, $out;
         @lines = grep { !m/^package / } @lines;
         my @inner_imports = grep { m/^import / } @lines;  # need to move up
@@ -258,6 +257,7 @@ sub unjd {
         @lines = grep { !m/^import / } @lines;
         @lines = map { "\t$_" } @lines;
         $out = join("\n", @lines);
+        $out =~ s/$outer_class\.//g;  # outer.inner -> inner
 
         my $code = read_file($outer_path);
         $code =~ s/^(package ([^\n]+)\n\n)/$1$inner_imports\n/;  # inner imports at top, after package
