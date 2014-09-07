@@ -79,6 +79,12 @@ for my $name (@files) {
     unjd($name);
 }
 
+sub uniq {
+    # http://perldoc.perl.org/perlfaq4.html#How-can-I-remove-duplicate-elements-from-a-list-or-array%3f
+    my %hash = map { $_, 1 } @_;
+    return keys %hash;
+}
+
 sub unjd {
     my ($name) = @_;
     my $path = "$root$name.html";
@@ -97,6 +103,7 @@ sub unjd {
     my $class_name;
     my $is_interface = 0;
     my $is_enum = 0;
+    my %imports;
     while(<FH>) {
         chomp;
 
@@ -149,6 +156,17 @@ sub unjd {
         }
 
         if ($_ eq '<!-- ============ METHOD DETAIL ========== -->' .. $_ eq '<!-- ========= END OF CLASS DATA ========= -->') {
+            if (m/^<A NAME="([^"]+)"><!-- --><\/A><H3>/) {
+                my $method_anchor = $1;    # name with fully-qualified type parameters TODO: but return value? may need to parse links instead
+                my ($ignored_name, $param_list) = $method_anchor =~ m/^([^(]+)\(([^)]*)/;
+                my @param_types = split /, /, $param_list;
+                @param_types = grep { m/[.]/ && $_ ne 'java.lang.String' } @param_types; # skiip unqualified types (assume built-in Java, float etc.)
+
+                # save fully-qualified type names for imports
+                $imports{$_}++ foreach @param_types;
+            }
+
+            # <PRE></PRE> tag surrounding method declaration with return value, name, parameter short types, and parameter names
             $method_accum = "" if m/^<PRE>/;
             if (m/^<PRE>/ .. m/<\/PRE>$/) {
                 $method_accum .= $_ . " ";
@@ -189,6 +207,15 @@ sub unjd {
     }
     $out .= "}\n";
     close(FH);
+
+    if (keys %imports) {
+        my @imports = sort keys %imports;
+        my $import_lines = "";
+        for my $import (@imports) {
+            $import_lines .= "import $import;\n";
+        }
+        $out = "$import_lines\n\n$out";
+    }
 
     if ($class_name =~ m/[.]/) {
         # inner class
