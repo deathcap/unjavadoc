@@ -104,6 +104,7 @@ sub unjd {
     my $is_interface = 0;
     my $is_enum = 0;
     my %imports;
+    my $package_line = "";
     while(<FH>) {
         chomp;
 
@@ -111,8 +112,7 @@ sub unjd {
             $class_declared = 0 if $_ eq '<!-- ======== START OF CLASS DATA ======== -->';
             if (m/<\/FONT>$/) {
                 my $package = strip_html($_);
-                $out .= "package $package;\n";
-                $out .= "\n";
+                $package_line = "package $package;\n";
             }
 
             $class_accum = "" if m/<DT><PRE>/;
@@ -215,6 +215,10 @@ sub unjd {
             $import_lines .= "import $import;\n";
         }
         $out = "$import_lines\n\n$out";
+    }
+
+    if ($package_line) {
+        $out = "$package_line\n$out";
     }
 
     if ($class_name =~ m/[.]/) {
