@@ -12,6 +12,7 @@ die "usage: $0 outdir < api.csv" if @ARGV != 1;
 my $outroot = shift @ARGV;
 
 # read API data into @classes
+my $t = " " x 4;
 while(<>) {
     chomp;
     if ($_ eq '') {
@@ -64,7 +65,7 @@ while(<>) {
     } elsif ($kind eq 'method') {
         if (defined($tokens[2])) {
             push @methods, "$tokens[1] {";
-            push @methods, "\treturn $tokens[2];";
+            push @methods, "${t}return $tokens[2];";
             push @methods, "}";
             push @methods, "";
         } else {
@@ -83,7 +84,6 @@ sub uniq {
 }
 
 # write
-my $t = " " x 4;
 for my $filename (sort keys %files) {
     my $path = "$outroot/$filename";
     my $dir = dirname($path);
@@ -117,7 +117,7 @@ EOF
     for my $data (@classes) {
         my $consts = join("", map { "$t$_,\n" } @{$data->{CONSTS}}) . (@{$data->{CONSTS}} ? ";\n" : "");
         my $fields = join("", map { "$t$_;\n" } @{$data->{FIELDS}});
-        my $methods = join("", map { "$t$_\n" } @{$data->{METHODS}});
+        my $methods = join("", map { length($_) ? "$t$_\n" : "\n" } @{$data->{METHODS}});
         my $indent = " " x ($data->{INNER} * 4);
 
         print FH <<EOF;
