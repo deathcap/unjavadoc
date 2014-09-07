@@ -211,11 +211,8 @@ sub unjd {
 
                 my $method_name;
 
-                if ($is_constructor) {
-                    ($method_name) = "CONSTRUCTOR"; #$decl; # TODO
-                } else {
-                    ($method_name) = $decl =~ m/\s+(\w+)\(/;
-                }
+                ($method_name) = $decl =~ m/\s+(\w+)\(/;
+                $method_name = "" if !defined($method_name);
 
                 if ($is_enum) {
                     if ($method_name eq 'values' || $method_name eq 'valueOf') {
@@ -234,7 +231,7 @@ sub unjd {
                         my $default = default_return($decl);  # initialize fields TODO: only if final?  && $decl =~ m/\bfinal\b/)
                         $out .= "\t$decl = $default;\n";
                     } else {
-                        $out .= "\t$decl;\n";
+                        $out .= "\t$decl;\n" if length($decl);
                     }
                 } else {
                     # method body
