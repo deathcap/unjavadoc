@@ -230,13 +230,13 @@ sub unjd {
                 if ($no_body) {
                     if ($is_field && $decl) {
                         my $default = default_return($decl);  # initialize fields TODO: only if final?  && $decl =~ m/\bfinal\b/)
-                        $out .= "\t$decl = $default;\n";
+                        $out .= "\n\t$decl = $default;\n";
                     } else {
-                        $out .= "\t$decl;\n" if length($decl);
+                        $out .= "\n\t$decl;\n" if length($decl);
                     }
                 } else {
                     # method body
-                    $out .= "\t$decl {\n";
+                    $out .= "\n\t$decl {\n";
                     my $return = default_return($decl, $is_constructor);
                     if (defined($return)) {
                         $out .= "\t\treturn $return;\n";
