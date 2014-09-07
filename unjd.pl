@@ -109,7 +109,7 @@ sub unjd {
     while(<FH>) {
         chomp;
 
-        if (m/title="(class|interface|enum|class or interface) in ([^"]+)">([^<]+)/) {
+        while (m/title="(class|interface|enum|class or interface) in ([^"]+)">([^<]+)/g) {
             my $package = $2;
             my $symbol = $3;
 
